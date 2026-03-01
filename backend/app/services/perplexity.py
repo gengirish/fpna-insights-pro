@@ -1,3 +1,4 @@
+import asyncio
 import httpx
 import structlog
 from app.config import get_settings
@@ -64,37 +65,51 @@ class LLMService:
         return self._mock_response(query, context), "Data Summary (no LLM key)"
 
     async def _call_llm(
-        self, provider: str, api_key: str, model: str, query: str, context: dict
+        self, provider: str, api_key: str, model: str, query: str, context: dict,
+        max_retries: int = 2,
     ) -> str | None:
         config = PROVIDERS[provider]
         headers = {"Authorization": f"Bearer {api_key}", **config["extra_headers"]}
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": f"Query: {query}\n\nDatabase Context:\n{context}",
+                },
+            ],
+        }
 
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(
-                    config["url"],
-                    json={
-                        "model": model,
-                        "messages": [
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {
-                                "role": "user",
-                                "content": f"Query: {query}\n\nDatabase Context:\n{context}",
-                            },
-                        ],
-                    },
-                    headers=headers,
-                )
-                resp.raise_for_status()
-                return resp.json()["choices"][0]["message"]["content"]
-        except httpx.HTTPStatusError as e:
-            logger.error(
-                "llm_api_error", provider=provider, status=e.response.status_code
-            )
-            return None
-        except Exception as e:
-            logger.error("llm_error", provider=provider, error=str(e))
-            return None
+        for attempt in range(max_retries + 1):
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    resp = await client.post(config["url"], json=payload, headers=headers)
+                    resp.raise_for_status()
+                    data = resp.json()
+                    return data["choices"][0]["message"]["content"]
+            except httpx.HTTPStatusError as e:
+                status_code = e.response.status_code
+                if status_code >= 500 and attempt < max_retries:
+                    logger.warning("llm_retry", provider=provider, status=status_code, attempt=attempt + 1)
+                    await asyncio.sleep(1 * (attempt + 1))
+                    continue
+                logger.error("llm_api_error", provider=provider, status=status_code)
+                return None
+            except (httpx.TimeoutException, httpx.ConnectError) as e:
+                if attempt < max_retries:
+                    logger.warning("llm_retry", provider=provider, error=type(e).__name__, attempt=attempt + 1)
+                    await asyncio.sleep(1 * (attempt + 1))
+                    continue
+                logger.error("llm_error", provider=provider, error=str(e))
+                return None
+            except (KeyError, IndexError, ValueError) as e:
+                logger.error("llm_parse_error", provider=provider, error=str(e))
+                return None
+            except Exception as e:
+                logger.error("llm_error", provider=provider, error=str(e))
+                return None
+        return None
 
     def _mock_response(self, query: str, context: dict) -> str:
         return (

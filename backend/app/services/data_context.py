@@ -1,7 +1,12 @@
 """Builds data context from PostgreSQL for RAG queries."""
 
+import asyncio
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+import structlog
+
+logger = structlog.get_logger()
 
 TABLE_QUERIES = {
     "budget_forecast": """
@@ -49,21 +54,34 @@ TABLE_QUERIES = {
 }
 
 
-async def build_data_context(db: AsyncSession, query: str, tables: list[str]) -> dict:
-    context = {}
+async def _fetch_table(db: AsyncSession, table: str) -> tuple[str, list | dict]:
+    sql = TABLE_QUERIES.get(table)
+    if not sql:
+        return table, []
+    try:
+        result = await db.execute(text(sql))
+        rows = result.mappings().all()
+        return table, [
+            {k: (str(v) if v is not None else None) for k, v in dict(row).items()}
+            for row in rows
+        ]
+    except SQLAlchemyError as e:
+        logger.error("data_context_query_failed", table=table, error=str(e))
+        return table, {"error": "Failed to fetch data"}
 
-    for table in tables:
-        sql = TABLE_QUERIES.get(table)
-        if not sql:
+
+async def build_data_context(db: AsyncSession, query: str, tables: list[str]) -> dict:
+    results = await asyncio.gather(
+        *[_fetch_table(db, table) for table in tables],
+        return_exceptions=True,
+    )
+
+    context = {}
+    for result in results:
+        if isinstance(result, Exception):
+            logger.error("data_context_unexpected_error", error=str(result))
             continue
-        try:
-            result = await db.execute(text(sql))
-            rows = result.mappings().all()
-            context[table] = [
-                {k: (str(v) if v is not None else None) for k, v in dict(row).items()}
-                for row in rows
-            ]
-        except Exception as e:
-            context[table] = {"error": str(e)}
+        table_name, data = result
+        context[table_name] = data
 
     return context
