@@ -89,8 +89,15 @@ class ARAgingItem(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: str = Field(..., min_length=3)
-    password: str = Field(..., min_length=1)
+    email: str = Field(..., min_length=5, max_length=254)
+    password: str = Field(..., min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        if "@" not in v or "." not in v.split("@")[-1]:
+            raise ValueError("Invalid email format")
+        return v.strip().lower()
 
 
 class TokenResponse(BaseModel):

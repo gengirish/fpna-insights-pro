@@ -6,7 +6,7 @@ import {
   BarChart3, BrainCircuit, LogOut, FileSpreadsheet,
   CreditCard, Receipt, BookOpen,
 } from "lucide-react";
-import { api, isAuthenticated, clearToken, getUser } from "@/lib/api";
+import { api, isAuthenticated, clearSession, getUser } from "@/lib/api";
 import type { DashboardSummary, AgingItem, ExpenseSummary, GLSummary } from "@/lib/api";
 import { KPICard } from "@/components/charts/kpi-card";
 import { BudgetChart } from "@/components/charts/budget-chart";
@@ -61,8 +61,9 @@ export default function DashboardPage() {
     }
   };
 
-  const handleLogout = () => {
-    clearToken();
+  const handleLogout = async () => {
+    try { await api.logout(); } catch { /* best-effort */ }
+    clearSession();
     router.replace("/login");
   };
 

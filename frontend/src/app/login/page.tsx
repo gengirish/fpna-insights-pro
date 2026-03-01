@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, setToken } from "@/lib/api";
+import { api, setUserInfo } from "@/lib/api";
 import { BarChart3 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@fpna.local");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +19,7 @@ export default function LoginPage() {
 
     try {
       const resp = await api.login(email, password);
-      setToken(resp.access_token);
+      setUserInfo(resp.user);
       router.push("/dashboard");
     } catch {
       setError("Invalid email or password");
@@ -42,28 +42,34 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="rounded-2xl border bg-white p-8 shadow-sm">
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+              <label htmlFor="login-email" className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
               <input
+                id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                autoComplete="email"
                 className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 required
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
+              <label htmlFor="login-password" className="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
               <input
+                id="login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                autoComplete="current-password"
                 className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 required
               />
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+              <div role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
             )}
 
             <button
@@ -74,10 +80,6 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </div>
-
-          <p className="mt-4 text-center text-xs text-slate-400">
-            Default: admin@fpna.local / admin123
-          </p>
         </form>
       </div>
     </div>

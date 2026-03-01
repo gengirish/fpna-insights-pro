@@ -6,66 +6,53 @@ class ApiError extends Error {
   }
 }
 
-let _token: string | null = null;
+interface UserInfo {
+  id: number;
+  email: string;
+  full_name: string;
+  role: string;
+}
 
-export function setToken(token: string) {
-  _token = token;
+const SESSION_KEY = "fpna_user";
+
+export function setUserInfo(user: UserInfo) {
   if (typeof window !== "undefined") {
-    localStorage.setItem("fpna_token", token);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
   }
 }
 
-export function getToken(): string | null {
-  if (_token) return _token;
-  if (typeof window !== "undefined") {
-    _token = localStorage.getItem("fpna_token");
-  }
-  return _token;
-}
-
-export function clearToken() {
-  _token = null;
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("fpna_token");
-  }
-}
-
-export function isAuthenticated(): boolean {
-  const token = getToken();
-  if (!token) return false;
+export function getUser(): UserInfo | null {
+  if (typeof window === "undefined") return null;
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.exp * 1000 > Date.now();
-  } catch {
-    return false;
-  }
-}
-
-export function getUser(): { id: number; email: string; full_name: string; role: string } | null {
-  const token = getToken();
-  if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return { id: payload.sub, email: payload.email, full_name: payload.full_name || payload.email, role: payload.role };
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = getToken();
+export function clearSession() {
+  if (typeof window !== "undefined") {
+    sessionStorage.removeItem(SESSION_KEY);
+  }
+}
 
+export function isAuthenticated(): boolean {
+  return getUser() !== null;
+}
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });
 
   if (res.status === 401) {
-    clearToken();
+    clearSession();
     if (typeof window !== "undefined") {
       window.location.href = "/login";
     }
@@ -138,7 +125,7 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   expires_in: number;
-  user: { id: number; email: string; full_name: string; role: string };
+  user: UserInfo;
 }
 
 // API client
@@ -148,6 +135,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
+
+  logout: () =>
+    request<{ status: string }>("/api/v1/auth/logout", { method: "POST" }),
+
+  getMe: () => request<UserInfo>("/api/v1/auth/me"),
 
   health: () => request<{ status: string }>("/api/v1/health"),
 
