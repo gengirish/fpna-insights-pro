@@ -13,13 +13,16 @@ import os
 import sys
 import argparse
 from pathlib import Path
+from contextlib import suppress
 
 try:
     import psycopg2
+    from psycopg2.extras import execute_values
 except ImportError:
     print("Installing psycopg2-binary...")
     os.system(f"{sys.executable} -m pip install psycopg2-binary")
     import psycopg2
+    from psycopg2.extras import execute_values
 
 
 SEED_DIR = Path(__file__).parent / "seed"
@@ -132,11 +135,9 @@ def seed_table(conn, table: str, config: dict):
             rows.append(tuple(values))
 
     with conn.cursor() as cur:
-        # Clear existing data
         cur.execute(f"DELETE FROM {table}")
-        for i in range(0, len(rows), 500):
-            batch = rows[i : i + 500]
-            cur.executemany(insert_sql, batch)
+        insert_vals_sql = f"INSERT INTO {table} ({col_names}) VALUES %s"
+        execute_values(cur, insert_vals_sql, rows, page_size=500)
     conn.commit()
     print(f"  {table}: {len(rows)} rows inserted")
 

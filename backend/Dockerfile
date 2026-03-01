@@ -6,5 +6,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 FROM base AS production
 COPY . .
-EXPOSE 8001
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "2"]
+ENV PORT=8001
+EXPOSE ${PORT}
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers 2
