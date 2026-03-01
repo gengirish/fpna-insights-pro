@@ -1,6 +1,6 @@
 ---
 name: fpna-devops-deploy
-description: Configure Docker, Docker Compose, CI/CD pipelines, and production deployments for FPnA Insights PRO. Use when working with Dockerfiles, docker-compose, GitHub Actions, Vercel, Render, or deployment configuration.
+description: Configure Docker, Docker Compose, CI/CD pipelines, and production deployments for FPnA Insights PRO. Use when working with Dockerfiles, docker-compose, GitHub Actions, Vercel, Fly.io, or deployment configuration.
 ---
 
 # FPnA DevOps & Deployment

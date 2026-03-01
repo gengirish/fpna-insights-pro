@@ -1,4 +1,6 @@
+import json
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from functools import lru_cache
 
 
@@ -19,8 +21,15 @@ class Settings(BaseSettings):
     perplexity_api_key: str = ""
     mcp_server_url: str = "http://mcp:8000"
 
-    # CORS
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # CORS — accepts JSON array or comma-separated string
+    cors_origins: str = "http://localhost:3000"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        val = self.cors_origins.strip()
+        if val.startswith("["):
+            return json.loads(val)
+        return [s.strip() for s in val.split(",") if s.strip()]
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

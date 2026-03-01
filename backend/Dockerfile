@@ -8,4 +8,4 @@ FROM base AS production
 COPY . .
 ENV PORT=8001
 EXPOSE ${PORT}
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers 2
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers 1
