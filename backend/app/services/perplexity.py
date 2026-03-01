@@ -20,41 +20,86 @@ When responding:
 5. Format currency values with $ and commas
 6. Use bullet points for clarity"""
 
+PROVIDERS = {
+    "openrouter": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "extra_headers": {"HTTP-Referer": "https://fpna-insights-pro.vercel.app"},
+    },
+    "perplexity": {
+        "url": "https://api.perplexity.ai/chat/completions",
+        "extra_headers": {},
+    },
+}
 
-class PerplexityService:
-    async def generate(self, query: str, context: dict) -> str:
+
+class LLMService:
+    """Unified LLM service: tries OpenRouter first, then Perplexity, then mock."""
+
+    async def generate(self, query: str, context: dict) -> tuple[str, str]:
+        """Returns (response_text, provider_name)."""
         settings = get_settings()
 
-        if not settings.perplexity_api_key:
-            return self._mock_response(query, context)
+        if settings.openrouter_api_key:
+            result = await self._call_llm(
+                provider="openrouter",
+                api_key=settings.openrouter_api_key,
+                model=settings.openrouter_model,
+                query=query,
+                context=context,
+            )
+            if result:
+                return result, "OpenRouter"
+
+        if settings.perplexity_api_key:
+            result = await self._call_llm(
+                provider="perplexity",
+                api_key=settings.perplexity_api_key,
+                model="sonar",
+                query=query,
+                context=context,
+            )
+            if result:
+                return result, "Perplexity Sonar"
+
+        return self._mock_response(query, context), "Data Summary (no LLM key)"
+
+    async def _call_llm(
+        self, provider: str, api_key: str, model: str, query: str, context: dict
+    ) -> str | None:
+        config = PROVIDERS[provider]
+        headers = {"Authorization": f"Bearer {api_key}", **config["extra_headers"]}
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
-                    "https://api.perplexity.ai/chat/completions",
+                    config["url"],
                     json={
-                        "model": "sonar",
+                        "model": model,
                         "messages": [
                             {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": f"Query: {query}\n\nDatabase Context:\n{context}"},
+                            {
+                                "role": "user",
+                                "content": f"Query: {query}\n\nDatabase Context:\n{context}",
+                            },
                         ],
                     },
-                    headers={"Authorization": f"Bearer {settings.perplexity_api_key}"},
+                    headers=headers,
                 )
                 resp.raise_for_status()
                 return resp.json()["choices"][0]["message"]["content"]
         except httpx.HTTPStatusError as e:
-            logger.error("perplexity_api_error", status=e.response.status_code)
-            return f"LLM API error (status {e.response.status_code}). Using data context only.\n\nData summary:\n{self._summarize(context)}"
+            logger.error(
+                "llm_api_error", provider=provider, status=e.response.status_code
+            )
+            return None
         except Exception as e:
-            logger.error("perplexity_error", error=str(e))
-            return f"Could not reach LLM service. Data summary:\n{self._summarize(context)}"
+            logger.error("llm_error", provider=provider, error=str(e))
+            return None
 
     def _mock_response(self, query: str, context: dict) -> str:
-        """Fallback when no API key is configured -- returns structured data summary."""
         return (
             f"**Analysis for:** {query}\n\n"
-            f"*Note: Running without Perplexity API key. Showing raw data context.*\n\n"
+            f"*No LLM API key configured. Showing raw data context.*\n\n"
             f"{self._summarize(context)}"
         )
 
@@ -69,3 +114,7 @@ class PerplexityService:
             else:
                 parts.append(f"**{key}**: {value}")
         return "\n".join(parts) if parts else "No data available."
+
+
+# Backward-compatible alias
+PerplexityService = LLMService

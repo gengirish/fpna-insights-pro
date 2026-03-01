@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
 
-    # External services
+    # External services — LLM (OpenRouter preferred, Perplexity fallback)
+    openrouter_api_key: str = ""
+    openrouter_model: str = "google/gemini-2.0-flash-001"
     perplexity_api_key: str = ""
     mcp_server_url: str = "http://mcp:8000"
 
