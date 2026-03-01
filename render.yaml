@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: fpna-insights-api
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PERPLEXITY_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: '["https://fpna-insights-pro.vercel.app"]'
+      - key: DEBUG
+        value: "false"
+    healthCheckPath: /api/v1/health
