@@ -49,7 +49,7 @@ export function BudgetChart({ data, loading }: BudgetChartProps) {
             <XAxis dataKey="dept" fontSize={12} tick={{ fill: "#64748b" }} />
             <YAxis fontSize={12} tick={{ fill: "#64748b" }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
             <Tooltip
-              formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
+              formatter={(value) => [`$${Number(value).toLocaleString()}`, ""]}
               contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0" }}
             />
             <Legend />

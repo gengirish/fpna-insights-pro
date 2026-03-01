@@ -46,7 +46,7 @@ export function DeptPie({ data, loading }: DeptPieProps) {
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => `$${value.toLocaleString()}`} />
+            <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
