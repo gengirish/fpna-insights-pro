@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "fpna-postgres": {
+      "command": "node",
+      "args": ["dist/src/stdioIndex.js"],
+      "cwd": "mcp-server",
+      "env": {
+        "POSTGRES_URL": "postgresql://postgres:changeme@localhost:5433/fpna_insights"
+      }
+    }
+  }
+}

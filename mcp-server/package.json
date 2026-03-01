@@ -1,0 +1,81 @@
+{
+  "name": "@ahmedmustahid/postgres-mcp-server",
+  "version": "0.8.4",
+  "description": "MCP server for interacting with PostgreSQL databases",
+  "license": "MIT",
+  "author": "Ahmed Mustahid",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "homepage": "https://modelcontextprotocol.io",
+  "bugs": {
+    "url": "https://github.com/modelcontextprotocol/servers/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "postgres",
+    "mcp",
+    "server",
+    "database",
+    "model-context-protocol"
+  ],
+  "exports": {
+    ".": "./dist/src/index.js",
+    "./stdio": "./dist/src/stdioIndex.js"
+  },
+  "type": "module",
+  "bin": {
+    "postgres-mcp-server": "dist/src/cli.js"
+  },
+  "files": [
+    "README.md",
+    "dist/src"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/src/*.js",
+    "prepublishOnly": "npm run build",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "dev:http": "tsx src/index.ts",
+    "dev:stdio": "tsx src/stdioIndex.ts",
+    "start:http": "node dist/src/index.js",
+    "start:stdio": "node dist/src/stdioIndex.js",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d mcp-http",
+    "docker:up:stdio": "docker-compose --profile stdio up mcp-stdio",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:logs:http": "docker-compose logs -f mcp-http",
+    "docker:logs:stdio": "docker-compose logs -f mcp-stdio",
+    "docker:shell:http": "docker-compose exec mcp-http sh",
+    "docker:clean": "docker-compose down -v --rmi all",
+    "compose:dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up",
+    "lint": "echo 'Linting not configured'",
+    "format": "echo 'Formatting not configured'"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.23",
+    "@types/pg": "^8.11.10",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  },
+  "main": "dist/src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ahmedmustahid/postgres-mcp-server"
+  }
+}
