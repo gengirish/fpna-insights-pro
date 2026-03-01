@@ -1,22 +1,40 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { api, isAuthenticated, clearSession, getUser } from "@/lib/api";
 import type { DashboardSummary, AgingItem, ExpenseSummary, GLSummary } from "@/lib/api";
 import { KPICard } from "@/components/charts/kpi-card";
-import { BudgetChart } from "@/components/charts/budget-chart";
-import { DeptPie } from "@/components/charts/dept-pie";
-import { VarianceTable } from "@/components/charts/variance-table";
-import { ChatDialog } from "@/components/ask-ai/chat-dialog";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { DashboardSkeleton, TabSkeleton } from "@/components/ui/skeleton";
+import { DashboardSkeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sidebar, type Tab } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { cn, formatCurrency } from "@/lib/utils";
+
+const BudgetChart = dynamic(
+  () => import("@/components/charts/budget-chart").then((m) => m.BudgetChart),
+  { loading: () => <div className="rounded-xl border bg-white p-6 shadow-sm"><Skeleton className="h-[300px] w-full" /></div> }
+);
+
+const DeptPie = dynamic(
+  () => import("@/components/charts/dept-pie").then((m) => m.DeptPie),
+  { loading: () => <div className="rounded-xl border bg-white p-6 shadow-sm"><Skeleton className="h-[300px] w-full" /></div> }
+);
+
+const VarianceTable = dynamic(
+  () => import("@/components/charts/variance-table").then((m) => m.VarianceTable),
+  { loading: () => <div className="rounded-xl border bg-white p-6 shadow-sm"><Skeleton className="h-[200px] w-full" /></div> }
+);
+
+const ChatDialog = dynamic(
+  () => import("@/components/ask-ai/chat-dialog").then((m) => m.ChatDialog),
+  { ssr: false }
+);
 
 export default function DashboardPage() {
   const router = useRouter();
