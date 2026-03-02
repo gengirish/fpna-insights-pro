@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
     cookie_secure: bool = False  # True in production (HTTPS)
+    cookie_samesite: str = "lax"  # "none" for cross-origin deployments (Vercel + Fly.io)
     cookie_domain: str | None = None
 
     # External services — LLM (OpenRouter preferred, Perplexity fallback)
