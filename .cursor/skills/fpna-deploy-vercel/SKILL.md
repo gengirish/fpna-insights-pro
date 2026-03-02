@@ -101,7 +101,7 @@ flyctl secrets set \
   DATABASE_URL="postgresql+asyncpg://USER:PASS@ep-xxx.neon.tech/neondb?ssl=require" \
   JWT_SECRET="$(openssl rand -hex 32)" \
   OPENROUTER_API_KEY="sk-or-v1-your-key" \
-  CORS_ORIGINS="https://frontend-eta-black.vercel.app" \
+  CORS_ORIGINS="https://your-app.vercel.app" \
   --app fpna-insights-api
 
 flyctl deploy --app fpna-insights-api --remote-only
@@ -168,7 +168,7 @@ npx vercel --yes --prod   # redeploy to pick up new env
 ## Step 5: End-to-End Verification
 
 ```
-1. Open https://frontend-eta-black.vercel.app
+1. Open https://your-app.vercel.app
 2. Login: admin@fpna.local / admin123
 3. Verify:
    - [ ] KPI cards show real numbers (Total Actual Spend ~$1.8M)
