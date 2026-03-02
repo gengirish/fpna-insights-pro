@@ -2,16 +2,10 @@
 
 ## Deployed URLs
 
-> **Before testing:** Replace `<YOUR_VERCEL_URL>` and `<YOUR_BACKEND_URL>` below with your
-> actual deployment URLs. To find them:
->
-> - **Vercel frontend:** Run `npx vercel ls` or check [vercel.com/dashboard](https://vercel.com/dashboard)
-> - **Fly.io backend:** Run `flyctl apps list` or check [fly.io/dashboard](https://fly.io/dashboard)
-
 | Service  | URL |
 |----------|-----|
-| Frontend | `<YOUR_VERCEL_URL>` (e.g. `https://fpna-insights-pro.vercel.app`) |
-| Backend  | `<YOUR_BACKEND_URL>` (e.g. `https://fpna-insights-api.fly.dev`) |
+| Frontend | https://frontend-eta-black.vercel.app |
+| Backend  | https://fpna-insights-api.fly.dev |
 | Database | Neon PostgreSQL (serverless) — [console.neon.tech](https://console.neon.tech) |
 
 ### Quick URL Setup (run once, then all commands below just work)
@@ -19,13 +13,13 @@
 ```bash
 # bash / zsh
 export API_URL="https://fpna-insights-api.fly.dev"
-export FRONTEND_URL="https://your-app.vercel.app"
+export FRONTEND_URL="https://frontend-eta-black.vercel.app"
 ```
 
 ```powershell
 # PowerShell
 $API_URL = "https://fpna-insights-api.fly.dev"
-$FRONTEND_URL = "https://your-app.vercel.app"
+$FRONTEND_URL = "https://frontend-eta-black.vercel.app"
 ```
 
 ---
@@ -283,7 +277,7 @@ Invoke-RestMethod -Uri "$API_URL/api/v1/rag/query" `
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | 502 Bad Gateway | Fly.io machine stopped or OOM | Wait 5s and retry (cold start), or scale: `flyctl scale memory 512` |
-| CORS error in browser | Frontend URL not in `CORS_ORIGINS` | `flyctl secrets set CORS_ORIGINS="https://your-app.vercel.app"` |
+| CORS error in browser | Frontend URL not in `CORS_ORIGINS` | `flyctl secrets set CORS_ORIGINS="https://frontend-eta-black.vercel.app"` |
 | 401 Unauthorized | Token expired or missing | Re-login to get a fresh token |
 | 503 Database unhealthy | Neon connection issue | Check Neon dashboard, verify `DATABASE_URL` secret on Fly.io |
 | Empty dashboard data | Database not seeded | Run `python db/seed_database.py --neon` |

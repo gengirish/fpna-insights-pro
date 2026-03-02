@@ -16,7 +16,7 @@ services:
       - key: PERPLEXITY_API_KEY
         sync: false
       - key: CORS_ORIGINS
-        value: '["https://your-app.vercel.app"]'
+        value: '["https://frontend-eta-black.vercel.app"]'
       - key: DEBUG
         value: "false"
     healthCheckPath: /api/v1/health
