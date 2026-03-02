@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request as FastAPIRequest
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 import structlog
@@ -15,15 +15,15 @@ router = APIRouter(prefix="/rag", tags=["RAG"])
 @router.post("/query", response_model=RAGQueryResponse)
 @limiter.limit("10/minute")
 async def rag_query(
-    http_request: FastAPIRequest,
-    request: RAGQueryRequest,
+    request: Request,
+    body: RAGQueryRequest,
     db: AsyncSession = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    postgres_data = await build_data_context(db, request.query, request.tables)
+    postgres_data = await build_data_context(db, body.query, body.tables)
 
     llm_response, provider = await LLMService().generate(
-        query=request.query,
+        query=body.query,
         context=postgres_data,
     )
 
@@ -37,8 +37,8 @@ async def rag_query(
                 """),
                 {
                     "uid": user_id,
-                    "query": request.query,
-                    "tables": request.tables,
+                    "query": body.query,
+                    "tables": body.tables,
                     "summary": llm_response[:500],
                 },
             )
