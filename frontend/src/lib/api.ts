@@ -128,6 +128,19 @@ export interface LoginResponse {
   user: UserInfo;
 }
 
+export interface ApiKeyEntry {
+  provider: string;
+  masked_key: string;
+  model_preference: string | null;
+  has_key: boolean;
+}
+
+export interface ApiKeysResponse {
+  keys: ApiKeyEntry[];
+  server_has_openrouter: boolean;
+  server_has_perplexity: boolean;
+}
+
 // API client
 export const api = {
   login: (email: string, password: string) =>
@@ -155,5 +168,24 @@ export const api = {
     request<RAGResponse>("/api/v1/rag/query", {
       method: "POST",
       body: JSON.stringify({ query }),
+    }),
+
+  getApiKeys: () =>
+    request<ApiKeysResponse>("/api/v1/auth/settings/api-keys"),
+
+  saveApiKey: (provider: string, apiKey: string, modelPreference?: string) =>
+    request<{ status: string }>("/api/v1/auth/settings/api-keys", {
+      method: "PUT",
+      body: JSON.stringify({
+        provider,
+        api_key: apiKey,
+        model_preference: modelPreference || null,
+      }),
+    }),
+
+  deleteApiKey: (provider: string) =>
+    request<{ status: string }>("/api/v1/auth/settings/api-keys", {
+      method: "DELETE",
+      body: JSON.stringify({ provider }),
     }),
 };

@@ -33,11 +33,45 @@ PROVIDERS = {
 
 
 class LLMService:
-    """Unified LLM service: tries OpenRouter first, then Perplexity, then mock."""
+    """Unified LLM service: tries user BYOK first, then server keys, then mock."""
 
-    async def generate(self, query: str, context: dict) -> tuple[str, str]:
-        """Returns (response_text, provider_name)."""
+    async def generate(
+        self,
+        query: str,
+        context: dict,
+        user_keys: dict[str, dict] | None = None,
+    ) -> tuple[str, str]:
+        """Returns (response_text, provider_name).
+
+        user_keys format: {"openrouter": {"api_key": "...", "model": "..."}, ...}
+        Priority: user BYOK > server env vars > mock fallback.
+        """
         settings = get_settings()
+        user_keys = user_keys or {}
+
+        byok_or = user_keys.get("openrouter")
+        if byok_or:
+            result = await self._call_llm(
+                provider="openrouter",
+                api_key=byok_or["api_key"],
+                model=byok_or.get("model") or settings.openrouter_model,
+                query=query,
+                context=context,
+            )
+            if result:
+                return result, "OpenRouter (BYOK)"
+
+        byok_pp = user_keys.get("perplexity")
+        if byok_pp:
+            result = await self._call_llm(
+                provider="perplexity",
+                api_key=byok_pp["api_key"],
+                model=byok_pp.get("model") or "sonar",
+                query=query,
+                context=context,
+            )
+            if result:
+                return result, "Perplexity Sonar (BYOK)"
 
         if settings.openrouter_api_key:
             result = await self._call_llm(

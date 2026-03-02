@@ -47,7 +47,11 @@ class Settings(BaseSettings):
                 "Generate one with: openssl rand -hex 32"
             )
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {
+        "env_file": (".env", "../.env"),
+        "env_file_encoding": "utf-8",
+        "extra": "ignore",
+    }
 
 
 @lru_cache

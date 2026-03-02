@@ -1,6 +1,7 @@
 "use client";
 
-import { LogOut, BarChart3 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { LogOut, BarChart3, Settings } from "lucide-react";
 
 interface TopbarProps {
   email: string | undefined;
@@ -10,6 +11,8 @@ interface TopbarProps {
 }
 
 export function Topbar({ email, fiscalYear, onFiscalYearChange, onLogout }: TopbarProps) {
+  const router = useRouter();
+
   return (
     <header className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur-md">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6">
@@ -32,6 +35,14 @@ export function Topbar({ email, fiscalYear, onFiscalYearChange, onLogout }: Topb
             <option value={2024}>FY 2024</option>
           </select>
           <div className="hidden sm:block text-sm text-slate-500">{email}</div>
+          <button
+            onClick={() => router.push("/dashboard/settings")}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            aria-label="API Key Settings"
+            title="API Key Settings"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
           <button
             onClick={onLogout}
             className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"

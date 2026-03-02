@@ -1,6 +1,7 @@
 "use client";
 
-import { BarChart3, CreditCard, Receipt, FileSpreadsheet, BookOpen, BrainCircuit } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BarChart3, CreditCard, Receipt, FileSpreadsheet, BookOpen, BrainCircuit, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type Tab = "overview" | "ap" | "ar" | "expenses" | "gl";
@@ -22,6 +23,8 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 export { NAV_ITEMS };
 
 export function Sidebar({ activeTab, onTabChange, onAskAI }: SidebarProps) {
+  const router = useRouter();
+
   return (
     <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:border-r lg:bg-white">
       <div className="flex h-16 items-center gap-3 border-b px-6">
@@ -49,7 +52,14 @@ export function Sidebar({ activeTab, onTabChange, onAskAI }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="border-t p-3">
+      <div className="space-y-2 border-t p-3">
+        <button
+          onClick={() => router.push("/dashboard/settings")}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+        >
+          <Settings className="h-5 w-5" />
+          API Keys
+        </button>
         <button
           onClick={onAskAI}
           className="flex w-full items-center gap-3 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"

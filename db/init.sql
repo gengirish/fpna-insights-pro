@@ -85,6 +85,17 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS user_api_keys (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    encrypted_key TEXT NOT NULL,
+    model_preference VARCHAR(100),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, provider)
+);
+
 CREATE TABLE IF NOT EXISTS query_audit_log (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -109,3 +120,4 @@ CREATE INDEX IF NOT EXISTS idx_ec_status ON expense_claims(status);
 CREATE INDEX IF NOT EXISTS idx_ec_category ON expense_claims(category);
 CREATE INDEX IF NOT EXISTS idx_ec_employee ON expense_claims(employee_id);
 CREATE INDEX IF NOT EXISTS idx_audit_user ON query_audit_log(user_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_user_api_keys_user ON user_api_keys(user_id);

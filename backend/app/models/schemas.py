@@ -105,3 +105,55 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     user: dict
+
+
+# --- BYOK (Bring Your Own Key) settings ---
+
+ALLOWED_PROVIDERS = {"openrouter", "perplexity"}
+
+
+class ApiKeyEntry(BaseModel):
+    provider: str
+    masked_key: str
+    model_preference: str | None = None
+    has_key: bool = True
+
+
+class ApiKeysResponse(BaseModel):
+    keys: list[ApiKeyEntry]
+    server_has_openrouter: bool = False
+    server_has_perplexity: bool = False
+
+
+class ApiKeyUpdate(BaseModel):
+    provider: str = Field(..., min_length=1, max_length=50)
+    api_key: str = Field(..., min_length=1, max_length=500)
+    model_preference: str | None = Field(default=None, max_length=100)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_provider(cls, v: str) -> str:
+        v = v.strip().lower()
+        if v not in ALLOWED_PROVIDERS:
+            raise ValueError(f"Provider must be one of: {ALLOWED_PROVIDERS}")
+        return v
+
+    @field_validator("api_key")
+    @classmethod
+    def validate_api_key(cls, v: str) -> str:
+        v = v.strip()
+        if not v.startswith(("sk-", "pplx-")):
+            raise ValueError("API key must start with sk- or pplx-")
+        return v
+
+
+class ApiKeyDelete(BaseModel):
+    provider: str = Field(..., min_length=1, max_length=50)
+
+    @field_validator("provider")
+    @classmethod
+    def validate_provider(cls, v: str) -> str:
+        v = v.strip().lower()
+        if v not in ALLOWED_PROVIDERS:
+            raise ValueError(f"Provider must be one of: {ALLOWED_PROVIDERS}")
+        return v
